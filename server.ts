@@ -29,7 +29,15 @@ app.prepare().then(() => {
 
     io.emit('initial-messages', messages);
 
-    socket.on('publish-message', (message) => {
+    socket.on('publish-message', (message: any) => {
+      console.log('PUBLISH MESSAGE')
+      /*prisma.message.create({
+        data: { 
+          content: message as string, 
+          authorId: 3
+        }
+      });*/
+      socket.emit('new-message', message);
       
     });
     

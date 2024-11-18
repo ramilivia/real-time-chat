@@ -1,15 +1,15 @@
 "use client"
 
 import PageTitle from "@/components/page-title";
-import { prisma } from "@/lib/prisma";
-import { socket } from "../socket";
+import { socket } from "@/lib/socket";
 import { useEffect, useState } from "react";
 
 export default function ChatPage() {
 
     const [messages, setMessages] = useState([]);
     const [isConnected, setIsConnected] = useState(false);
-    const [transport, setTransport] = useState("N/A")//
+    const [transport, setTransport] = useState('N/A');
+    const [newMessage, setNewMessage] = useState('');
 
     useEffect(() => {
         if (socket.connected) {
@@ -37,15 +37,31 @@ export default function ChatPage() {
             setMessages(messages);
         });
 
+
+
         return () => {
             socket.off("connect", onConnect);
             socket.off("disconnect", onDisconnect);
         };
     }, []);
 
+
+    const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setNewMessage(e.target.value);
+    }
+
+    const handleOnClick = () => {
+        console.log('New Message: ', newMessage)
+        socket.emit('publish-message', newMessage); 
+    }
+
     return (
         <div>
             <PageTitle>Chat Window</PageTitle>
+            <div>
+                <input placeholder="message" onChange={handleOnChange}></input>
+                <button onClick={handleOnClick}>Send New Message</button>
+            </div>
             <ul className="">
                 {messages.map(msg => (
                     <li className="mb-6" key={msg.id}>
