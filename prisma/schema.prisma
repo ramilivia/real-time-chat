@@ -26,5 +26,5 @@ model Author {
   createdAt     DateTime    @default(now())
   username      String
   password      String      
-  posts         Message[]
+  messages      Message[]
 }
