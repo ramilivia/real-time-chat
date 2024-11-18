@@ -1,16 +1,47 @@
+"use client"
+
 import PageTitle from "@/components/page-title";
 import { prisma } from "@/lib/prisma";
+import { socket } from "../socket";
+import { useEffect, useState } from "react";
 
-export default async function ChatPage() {
+export default function ChatPage() {
 
-    const messages = await prisma.message.findMany({
-        include: {
-            author: true
-        },
-        orderBy: {
-            createdAt: 'asc'
+    const [messages, setMessages] = useState([]);
+    const [isConnected, setIsConnected] = useState(false);
+    const [transport, setTransport] = useState("N/A")//
+
+    useEffect(() => {
+        if (socket.connected) {
+            onConnect();
         }
-    });
+
+        function onConnect() {
+            setIsConnected(true);
+            setTransport(socket.io.engine.transport.name);
+
+            socket.io.engine.on("upgrade", (transport: any) => {
+                setTransport(transport.name);
+            });
+        }
+
+        function onDisconnect() {
+            setIsConnected(false);
+            setTransport("N/A");
+        }
+
+        socket.on("connect", onConnect);
+        socket.on("disconnect", onDisconnect);
+        socket.on("initial-messages", (messages: any) => {
+            console.log('initial messages client')
+            setMessages(messages);
+        });
+
+        return () => {
+            socket.off("connect", onConnect);
+            socket.off("disconnect", onDisconnect);
+        };
+    }, []);
 
     return (
         <div>
@@ -23,6 +54,10 @@ export default async function ChatPage() {
                     </li>
                 ))}
             </ul>
+            <div>
+                <p>Status: {isConnected ? "connected" : "disconnected"}</p>
+                <p>Transport: {transport}</p>
+            </div>
         </div>
 
     );
